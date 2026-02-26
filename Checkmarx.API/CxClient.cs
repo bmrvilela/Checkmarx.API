@@ -4407,7 +4407,8 @@ namespace Checkmarx.API
                 Status = alreadyExist ? CxAuditWebServiceV9.QueryStatus.Edited : CxAuditWebServiceV9.QueryStatus.New,
                 Type = CxAuditWebServiceV9.CxWSQueryType.Regular,
                 IsExecutable = queryGroupSourceQuery.IsExecutable,
-                IsEncrypted = queryGroupSourceQuery.IsEncrypted
+                IsEncrypted = queryGroupSourceQuery.IsEncrypted,
+                CxDescriptionID = queryGroupSourceQuery.CxDescriptionID
             };
 
             string packageTypeName = $"Corp";
@@ -4462,7 +4463,8 @@ namespace Checkmarx.API
                 Status = CxAuditWebServiceV9.QueryStatus.New,
                 Type = CxAuditWebServiceV9.CxWSQueryType.Regular,
                 IsExecutable = queryGroupSourceQuery.IsExecutable,
-                IsEncrypted = queryGroupSourceQuery.IsEncrypted
+                IsEncrypted = queryGroupSourceQuery.IsEncrypted,
+                CxDescriptionID = queryGroupSourceQuery.CxDescriptionID
             };
 
             string packageTypeName = $"CxProject_{projectId}";
