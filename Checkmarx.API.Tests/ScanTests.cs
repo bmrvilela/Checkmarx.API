@@ -1161,6 +1161,114 @@ namespace Checkmarx.API.Tests
         }
 
 
+        [TestMethod]
+        public void GetScanReportTest()
+        {
+
+            long scanID = 1924697;
+
+            var filePath = clientV93.GetScanReportFile(scanID, reportType: ReportType.PDF, $"{scanID}.pdf");
+
+            Assert.IsNotNull(filePath);
+
+            Trace.WriteLine(filePath);
+
+
+        }
+
+
+        [TestMethod]
+        public void GetSOAPScanReportTest()
+        {
+            long scanID = 1924697;
+
+            var options = new cxPortalWebService93.CxWSFilteredReportRequest
+            {
+                ScanID= scanID,
+                Type = cxPortalWebService93.CxWSReportType.PDF,
+                DisplayData = new cxPortalWebService93.CxWSReportDisplayData
+                {
+                    GeneralOption = new cxPortalWebService93.CxWSGeneralDisplayOptions
+                    {
+                        DisplayCategories = true,
+                        ExecutiveSummary = true,
+                        TableOfContents = true,
+                        OnlyExecutiveSummary = true,
+                        VulnerabilitiesDescription = cxPortalWebService93.CxWSVulnerabilitiesDisplayOptions.None,
+                        ScannedQueries = true,
+                        ScannedFiles = true, 
+                        DisplayLanguageHashNumber = true
+                    },
+
+                    HeaderOptions = new cxPortalWebService93.CxWSHeaderDisplayOptions
+                    {
+                        CheckmarxVersion = true,
+                        ScanType = true,
+                        Team = true, 
+                        SourceOrigin = true,
+                        ScanComments = true,
+                        ScanDensity = true
+                    },
+                    ResultsSeverity = new cxPortalWebService93.CxWSResultsSeverityFilter
+                    {
+                        High = true,
+                        Medium = true,
+                        Low = true,
+                        Info = true
+                    },
+                    Queries = new cxPortalWebService93.CxWSQueriesFilter
+                    {
+                        All = true
+                    },
+                    ResultsState = new cxPortalWebService93.CxWSResultsStateFilter
+                    {
+                        All = true
+                    },
+                    DisplayCategories = new cxPortalWebService93.CxWSDisplayCategoriesFilter
+                    {
+                        All = true
+                    },
+                    ResultsPerVulnerability = new cxPortalWebService93.CxWSResultsPerVulnerabilityFilter
+                    {
+                        All = true
+                    },
+                    ResultsDisplayOption = new cxPortalWebService93.CxWSResultDisplayOptions
+                    {
+                        SnippetsMode = cxPortalWebService93.CxWSSnippetsModeDisplayOptions.SourceAndDestination
+                    },
+                    ResultsAssigedTo = new cxPortalWebService93.CxWSResultsAssignedToFilter
+                    {
+                        
+                    }
+                }
+            };
+
+            var result = clientV93.PortalSOAP.CreateScanReportAsync(string.Empty, options).Result;
+
+            Assert.IsTrue(result.IsSuccesfull, result.ErrorMessage);
+
+
+            var status = clientV93.PortalSOAP.GetScanReportStatusAsync(string.Empty, result.ID);
+            while (!status.Result.IsReady)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+                status = clientV93.PortalSOAP.GetScanReportStatusAsync(string.Empty, result.ID);
+
+                Assert.IsTrue(status.IsFaulted == false, "Error while generating report: " + status.Result.ErrorMessage);
+
+            }
+
+            byte[] report = clientV93.PortalSOAP.GetScanReportAsync(string.Empty, result.ID).Result.ScanResults;
+
+            var filename = Path.GetFullPath($"{scanID}_soap.pdf");
+
+            File.WriteAllBytes(filename, report);
+
+            Trace.WriteLine(filename);
+
+
+
+        }
 
 
     }
