@@ -12,9 +12,9 @@ namespace Checkmarx.API.Models
 {
     public class SOAPRetryPolicyProvider
     {
-        // Thread-safe caches for storing policies by type
-        private readonly ConcurrentDictionary<Type, object> _syncPolicyCache = new();
-        private readonly ConcurrentDictionary<Type, object> _asyncPolicyCache = new();
+        // Thread-safe caches for storing policies by (type, retryCount)
+        private readonly ConcurrentDictionary<(Type, int), object> _syncPolicyCache = new();
+        private readonly ConcurrentDictionary<(Type, int), object> _asyncPolicyCache = new();
 
         private readonly int _defaultRetries;
 
@@ -44,7 +44,7 @@ namespace Checkmarx.API.Models
             int effectiveRetries = retries > 0 ? retries : _defaultRetries;
 
             return (RetryPolicy<T>)_syncPolicyCache.GetOrAdd(
-                typeof(T),
+                (typeof(T), effectiveRetries),
                 _ => BuildRetryPolicy<T>(effectiveRetries)
             );
         }
@@ -54,7 +54,7 @@ namespace Checkmarx.API.Models
             int effectiveRetries = retries > 0 ? retries : _defaultRetries;
 
             return (AsyncRetryPolicy<T>)_asyncPolicyCache.GetOrAdd(
-                typeof(T),
+                (typeof(T), effectiveRetries),
                 _ => BuildAsyncRetryPolicy<T>(effectiveRetries)
             );
         }
@@ -148,8 +148,9 @@ namespace Checkmarx.API.Models
 
         private static TimeSpan GetRetryDelayExponential<T>(DelegateResult<T> outcome, int retryAttempt)
         {
-            var delay = TimeSpan.FromSeconds(Math.Pow(2, retryAttempt));
-            return delay;
+            var delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(2, retryAttempt), 30));
+            var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 1000));
+            return delay + jitter;
         }
 
         private static void OnRetry<T>(DelegateResult<T> outcome, TimeSpan timeSpan, int retryCount, Context context)

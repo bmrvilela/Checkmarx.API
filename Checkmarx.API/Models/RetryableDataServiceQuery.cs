@@ -91,27 +91,33 @@ namespace Checkmarx.API.Models
 
         #region Policy Builders
 
+        private static TimeSpan getRetryDelay(int retryAttempt)
+        {
+            var delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(2, retryAttempt), 30));
+            var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 1000));
+            return delay + jitter;
+        }
+
+        private static void onRetry<TResult>(DelegateResult<TResult> outcome, TimeSpan timespan, int retryAttempt, Context context)
+        {
+            Exception ex = outcome.Exception;
+            string message = ex?.Message ?? "Unknown error";
+
+            if (ex is HttpRequestException httpEx && httpEx.InnerException != null)
+                message = httpEx.InnerException.Message;
+            else if (ex is WebException webEx)
+                message = webEx.Message;
+
+            Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds:F1} seconds due to: {message}");
+        }
+
         private static Policy<IEnumerable<T>> buildRetryPolicy(int retries)
         {
             return Policy<IEnumerable<T>>
                 .Handle<DataServiceQueryException>(isTransientError)
                 .Or<HttpRequestException>(isTransientError)
                 .Or<WebException>(isTransientWebError)
-                .WaitAndRetry(
-                    retries,
-                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                    (outcome, timespan, retryAttempt, context) =>
-                    {
-                        Exception ex = outcome.Exception;
-                        string message = ex?.Message ?? "Unknown error";
-
-                        if (ex is HttpRequestException httpEx && httpEx.InnerException != null)
-                            message = httpEx.InnerException.Message;
-                        else if (ex is WebException webEx)
-                            message = webEx.Message;
-
-                        Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds} seconds due to: {message}");
-                    });
+                .WaitAndRetry(retries, getRetryDelay, onRetry);
         }
 
         private static Policy<object> buildGenericRetryPolicy(int retries)
@@ -120,21 +126,7 @@ namespace Checkmarx.API.Models
                 .Handle<DataServiceQueryException>(isTransientError)
                 .Or<HttpRequestException>(isTransientError)
                 .Or<WebException>(isTransientWebError)
-                .WaitAndRetry(
-                    retries,
-                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                    (outcome, timespan, retryAttempt, context) =>
-                    {
-                        Exception ex = outcome.Exception;
-                        string message = ex?.Message ?? "Unknown error";
-
-                        if (ex is HttpRequestException httpEx && httpEx.InnerException != null)
-                            message = httpEx.InnerException.Message;
-                        else if (ex is WebException webEx)
-                            message = webEx.Message;
-
-                        Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds} seconds due to: {message}");
-                    });
+                .WaitAndRetry(retries, getRetryDelay, onRetry);
         }
 
         private static bool isTransientError(DataServiceQueryException ex)
@@ -233,14 +225,6 @@ namespace Checkmarx.API.Models
             catch (TargetInvocationException ex) when (ex.InnerException is DataServiceClientException clientEx)
             {
                 throw clientEx;
-            }
-            catch (DataServiceQueryException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
             }
         }
     }

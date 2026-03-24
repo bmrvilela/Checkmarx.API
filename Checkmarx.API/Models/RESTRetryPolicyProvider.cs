@@ -36,22 +36,11 @@ namespace Checkmarx.API.Models
                     retryCount: retries,
                     sleepDurationProvider: (retryAttempt, outcome, context) =>
                     {
-                        //const string TooManyRequestsKey = "HadTooManyRequests";
-
-                        //if (outcome.Result?.StatusCode == HttpStatusCode.TooManyRequests)
-                        //{
-                        //    context[TooManyRequestsKey] = true;
-                        //    return TimeSpan.FromSeconds(10);
-                        //}
-
-                        //if (context.TryGetValue(TooManyRequestsKey, out var had429) && had429 is bool b && b)
-                        //{
-                        //    return TimeSpan.FromSeconds(10);
-                        //}
-
-                        return TimeSpan.FromSeconds(Math.Pow(2, retryAttempt));
+                        var delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(2, retryAttempt), 30));
+                        var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 1000));
+                        return delay + jitter;
                     },
-                    onRetryAsync: async (outcome, timespan, retryCount, context) =>
+                    onRetryAsync: (outcome, timespan, retryCount, context) =>
                     {
                         string message;
                         if (outcome.Exception != null)
@@ -73,8 +62,8 @@ namespace Checkmarx.API.Models
                             message = "Unknown error";
                         }
 
-                        Console.WriteLine($"Retry {retryCount} after {timespan.TotalSeconds} seconds due to: {message}");
-                        await Task.CompletedTask;
+                        Console.WriteLine($"Retry {retryCount} after {timespan.TotalSeconds:F1} seconds due to: {message}");
+                        return Task.CompletedTask;
                     });
 
             //var fallbackPolicy = Policy<HttpResponseMessage>
