@@ -21,9 +21,6 @@ namespace Checkmarx.API
             T newObject = new T();
             try
             {
-                // If the old object is null, just return the new object
-                if (oldObject == null) return newObject;
-
                 // Get the type of the new object and the type of the old object passed in
                 Type newObjType = typeof(T);
                 Type oldObjType = oldObject.GetType();
@@ -64,10 +61,6 @@ namespace Checkmarx.API
                         }
                     }
                 }
-            }
-            catch (Exception)
-            {
-                throw;
             }
 
             // Return the new object
@@ -121,7 +114,7 @@ namespace Checkmarx.API
 
                 result.MaxScans = item.MaxScans >= int.MinValue && item.MaxScans <= int.MaxValue ?
                     (int)item.MaxScans :
-                    throw new Exception("Error converting MinLoc");
+                    throw new Exception("Error converting MaxScans");
 
                 yield return result;
             }

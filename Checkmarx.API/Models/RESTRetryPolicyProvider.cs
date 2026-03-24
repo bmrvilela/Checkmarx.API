@@ -154,7 +154,7 @@ namespace Checkmarx.API.Models
             {
                 return new FormUrlEncodedContent(content.ReadAsStringAsync().Result.Split('&').Select(pair =>
                 {
-                    var kv = pair.Split('=');
+                    var kv = pair.Split(new[] { '=' }, 2);
                     return new KeyValuePair<string, string>(kv[0], kv.Length > 1 ? kv[1] : "");
                 }));
             }
