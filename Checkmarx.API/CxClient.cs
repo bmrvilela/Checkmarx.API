@@ -2609,6 +2609,13 @@ namespace Checkmarx.API
             return SASTClient.ScansQueueV1_GetScansQueueByprojectIdAsync(projectId).Result;
         }
 
+        public void PostponeScan(long scanId)
+        {
+            SASTClient.ScansQueueV1_PatchScansQueueByidscanRequestAsync(
+                scanId,
+                new PatchScansQueue { Status = PatchScansQueueStatus.Postponed }).Wait();
+        }
+
         /// <summary>
         /// get preset /sast/scanSettings/{projectId}
         /// </summary>
