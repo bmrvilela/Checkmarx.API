@@ -902,8 +902,7 @@ namespace Checkmarx.API
 
             Uri baseServer = new Uri(webServer.AbsoluteUri);
 
-            PortalSoap.CxPortalWebServiceSoapClient cxPortalWebServiceSoapClient = null;
-            cxPortalWebServiceSoapClient = new PortalSoap.CxPortalWebServiceSoapClient(
+            PortalSoap.CxPortalWebServiceSoapClient cxPortalWebServiceSoapClient = new PortalSoap.CxPortalWebServiceSoapClient(
               baseServer, TimeSpan.FromSeconds(360), "dummy", "dummy");
 
             return cxPortalWebServiceSoapClient.GetVersionNumber().Version;
@@ -1148,8 +1147,7 @@ namespace Checkmarx.API
             var webServer = new Uri(baseURL);
             Uri baseServer = new Uri(webServer.AbsoluteUri);
 
-            PortalSoap.CxPortalWebServiceSoapClient cxPortalWebServiceSoapClient = null;
-            cxPortalWebServiceSoapClient = new PortalSoap.CxPortalWebServiceSoapClient(
+            PortalSoap.CxPortalWebServiceSoapClient cxPortalWebServiceSoapClient = new PortalSoap.CxPortalWebServiceSoapClient(
                 baseServer, TimeSpan.FromSeconds(360), userName, password);
 
             if (ignoreCertificate)
